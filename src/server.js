@@ -3,7 +3,7 @@ import { NowstRepository } from './persistence/NowstRepository.js';
 
 const repositorio = new NowstRepository('data/nowst.sqlite');
 
-const app = crearApp();
+const app = crearApp(repositorio);
 const puerto = process.env.PORT || 3000;
 
 const servidor = app.listen(puerto, () => {

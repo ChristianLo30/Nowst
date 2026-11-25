@@ -63,6 +63,28 @@ export class NowstRepository {
             FROM salas ORDER BY id
         `).all();
     }
+    buscarSala(id) {
+    return this.db.prepare(`
+        SELECT id, nombre, capacidad,
+               tarifa AS tarifaHoraPersona,
+               abre, cierra
+        FROM salas
+        WHERE id = ?
+    `).get(id);
+    }
+
+    hayReserva(salaId, fecha, inicio, fin) {
+        const reserva = this.db.prepare(`
+            SELECT id FROM reservas
+            WHERE sala_id = ?
+            AND fecha = ?
+            AND estado = 'confirmada'
+            AND inicio < ?
+            AND fin > ?
+        `).get(salaId, fecha, fin, inicio);
+
+        return reserva !== undefined;
+    }
 
     cerrar() {
         this.db.close();
