@@ -11,6 +11,7 @@ export class NowstRepository {
 
         this.db = new DatabaseSync(archivo);
         this.db.exec('PRAGMA foreign_keys = ON');
+        this.db.exec('PRAGMA busy_timeout = 5000');
         this.crearTablas();
     }
 
@@ -84,6 +85,91 @@ export class NowstRepository {
         `).get(salaId, fecha, fin, inicio);
 
         return reserva !== undefined;
+    }
+    transaccion(accion) {
+    this.db.exec('BEGIN IMMEDIATE');
+
+    try {
+        const resultado = accion();
+        this.db.exec('COMMIT');
+        return resultado;
+    } catch (error) {
+        this.db.exec('ROLLBACK');
+        throw error;
+    }
+    }
+
+    guardarReserva(reserva) {
+        this.db.prepare(`
+            INSERT INTO reservas
+            (id, sala_id, usuario_id, fecha, inicio,
+            fin, personas, total, estado)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'confirmada')
+        `).run(
+            reserva.id,
+            reserva.salaId,
+            reserva.usuarioId,
+            reserva.fecha,
+            reserva.inicio,
+            reserva.fin,
+            reserva.personas,
+            reserva.total
+        );
+
+        return this.buscarReserva(reserva.id);
+    }
+
+    buscarReserva(id) {
+        return this.db.prepare(`
+            SELECT * FROM reservas
+            WHERE id = ?
+        `).get(id);
+    }
+
+    listarReservas(usuarioId) {
+        return this.db.prepare(`
+            SELECT * FROM reservas
+            WHERE usuario_id = ?
+            ORDER BY fecha, inicio
+        `).all(usuarioId);
+    }
+
+    cancelarReserva(id) {
+        this.db.prepare(`
+            UPDATE reservas
+            SET estado = 'cancelada'
+            WHERE id = ?
+        `).run(id);
+
+        return this.buscarReserva(id);
+    }
+
+    reservasActivasSala(salaId) {
+        return this.db.prepare(`
+            SELECT * FROM reservas
+            WHERE sala_id = ?
+            AND estado = 'confirmada'
+            AND fecha >= date('now', 'localtime')
+        `).all(salaId);
+    }
+
+    actualizarSala(id, sala) {
+        this.db.prepare(`
+            UPDATE salas
+            SET capacidad = ?,
+                tarifa = ?,
+                abre = ?,
+                cierra = ?
+            WHERE id = ?
+        `).run(
+            sala.capacidad,
+            sala.tarifaHoraPersona,
+            sala.abre,
+            sala.cierra,
+            id
+        );
+
+        return this.buscarSala(id);
     }
 
     cerrar() {
