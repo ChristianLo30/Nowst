@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nowst - Espacios de estudio</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <header>
+        <h1>Nowst.</h1>
+        <p>Reserva tu espacio de estudio</p>
+    </header>
+
+    <main>
+
+        <h2>Encuentra tu espacio ideal</h2>
+
+        <section>
+            <h3>Buscar disponibilidad</h3>
+
+            <form id="formBuscar">
+                <div class="campos">
+                    <label>Fecha
+                        <input type="date" id="fecha" required>
+                    </label>
+
+                    <label>Personas
+                        <input type="number" id="personas" min="1" value="4" required>
+                    </label>
+
+                    <label>Hora de inicio
+                        <input type="time" id="inicio" value="10:00" required>
+                    </label>
+
+                    <label>Hora de salida
+                        <input type="time" id="fin" value="12:00" required>
+                    </label>
+                </div>
+
+                <button type="submit">Buscar salas</button>
+            </form>
+
+            <p id="mensajeSalas" role="status"></p>
+            <div id="salas" class="tarjetas"></div>
+        </section>
+
+        <section>
+            <h3>Mis reservas</h3>
+
+            <label>Clave de estudiante
+                <input type="password" id="claveEstudiante"
+                       placeholder="Ingrese su clave">
+            </label>
+
+            <button id="btnReservas">Consultar mis reservas</button>
+
+            <p id="mensajeReservas" role="status"></p>
+            <div id="reservas"></div>
+        </section>
+
+        <section>
+            <h3>Administración</h3>
+
+            <form id="formAdmin">
+
+                <label>Clave de administrador
+                    <input type="password" id="claveAdmin" required>
+                </label>
+
+                <label>Seleccione una sala
+                    <select id="salaAdmin">
+                        <option value="1">Sala Silencio</option>
+                        <option value="2">Sala Equipo</option>
+                        <option value="3">Sala Taller</option>
+                    </select>
+                </label>
+
+                <div class="campos">
+                    <label>Nueva tarifa por persona/hora
+                        <input type="number" id="tarifaAdmin"
+                               min="0.01" step="0.01">
+                    </label>
+
+                    <label>Nueva capacidad
+                        <input type="number" id="capacidadAdmin" min="1">
+                    </label>
+
+                    <label>Hora de apertura
+                        <input type="time" id="abreAdmin">
+                    </label>
+
+                    <label>Hora de cierre
+                        <input type="time" id="cierraAdmin">
+                    </label>
+                </div>
+
+                <button type="submit">Guardar cambios</button>
+
+            </form>
+
+            <p id="mensajeAdmin" role="status"></p>
+        </section>
+
+    </main>
+
+    <footer>
+        Nowst | Proyecto de Arquitectura de Software
+    </footer>
+
+    <script src="script.js"></script>
+
+</body>
+</html>

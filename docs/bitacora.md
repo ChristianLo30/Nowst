@@ -12,6 +12,7 @@ El registro relaciona los cambios del repositorio con los casos de uso, reglas y
 | 2026-11-25 | `6006884` | Gestión de reservas y permisos | CU-03, CU-04; R-01 a R-04; QA-03, QA-04, QA-06, QA-07 | Servicio, repositorio, rutas y `.env.example` | Pruebas manuales de reservas y permisos confirmadas por el desarrollador. Se corrigió el envío de la clave en Params trasladándola a Headers. | Automatizar pruebas y documentar API. |
 | 2026-11-25 | `6b2180a` | Contrato API y pruebas automatizadas | CU-01 a CU-04; QA-01, QA-02, QA-03, QA-04, QA-06, QA-07 (verificación funcional parcial) | `docs/openapi.yaml`, `tests/nowst.test.js`, colección Postman y servicio | Se prepararon 5 pruebas automatizadas (2 unitarias, 3 de integración). Resultado de `npm test`: COMPLETAR con el resultado real. | Documentación final; metas cuantitativas pendientes. |
 | 2026-11-25 | Commit de documentación | Documentación y bitácora final | Trazabilidad CU-01 a CU-04 y R-01 a R-04 | `README.md`, `docs/bitacora.md` | Revisión de instrucciones y ejecución final: COMPLETAR con resultado real. | Mejoras futuras de seguridad, rendimiento y disponibilidad. |
+| 2026-11-25 | Pendiente | Implementación de interfaz web | CU-01, CU-02, CU-03, CU-04 | `public/`, `app.js`, `README.md` | Verificación de funcionalidades mediante la interfaz web conectada a la API REST. | Mejorar el diseño y la experiencia del usuario. |
 
 ## Trazabilidad de escenarios de calidad
 
@@ -30,3 +31,4 @@ El registro relaciona los cambios del repositorio con los casos de uso, reglas y
 - Mejorar el sistema de autenticación de usuarios.
 - Realizar pruebas de rendimiento y concurrencia.
 - Validar las tarifas y horarios del establecimiento.
+- Mejorar el diseño de la interfaz web.

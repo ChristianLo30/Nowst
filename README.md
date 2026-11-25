@@ -50,6 +50,16 @@ npm test
 
 El proyecto incluye cinco pruebas automatizadas (dos unitarias y tres de integración) mediante `node:test`, integrado en Node.js. Las pruebas de integración utilizan SQLite en memoria.
 
+## Interfaz web
+
+El proyecto incluye una interfaz desarrollada con HTML,
+CSS y JavaScript que consume los endpoints de la API.
+
+Para acceder, ejecutar `npm run dev` y abrir:
+
+http://localhost:3000
+
+
 ## Documentación
 
 - [Contrato OpenAPI](docs/openapi.yaml)
