@@ -49,10 +49,18 @@ export class NowstService {
             )
         );
 
+        if (disponibles.length === 0) {
+            return {
+                mensaje: 'No hay salas disponibles. Intente otro horario',
+                salas: [],
+                alternativas: this.sugerirHorarios(
+                    fecha, inicio, fin, personas
+                )
+            };
+        }
+
         return {
-            mensaje: disponibles.length > 0
-                ? 'Salas disponibles'
-                : 'No hay salas disponibles. Intente otro horario',
+            mensaje: 'Salas disponibles',
             salas: disponibles
         };
     }
@@ -248,6 +256,58 @@ export class NowstService {
             Number(id), nuevaSala
         );
     });
+    }
+    sugerirHorarios(fecha, inicio, fin, personas) {
+
+    const duracion = this.convertirMinutos(fin)
+        - this.convertirMinutos(inicio);
+
+    const alternativas = [];
+    const salas = this.repositorio.listarSalas();
+
+    const formato = minutos => {
+        const h = Math.floor(minutos / 60);
+        const m = minutos % 60;
+
+        return String(h).padStart(2, '0') + ':' +
+               String(m).padStart(2, '0');
+    };
+
+    for (const sala of salas) {
+
+        if (sala.capacidad < personas) {
+            continue;
+        }
+
+        const apertura = this.convertirMinutos(sala.abre);
+        const cierre = this.convertirMinutos(sala.cierra);
+
+        for (let hora = apertura;
+             hora + duracion <= cierre;
+             hora += 30) {
+
+            const nuevoInicio = formato(hora);
+            const nuevoFin = formato(hora + duracion);
+
+            if (!this.repositorio.hayReserva(
+                sala.id, fecha, nuevoInicio, nuevoFin
+            )) {
+                alternativas.push({
+                    salaId: sala.id,
+                    sala: sala.nombre,
+                    fecha,
+                    inicio: nuevoInicio,
+                    fin: nuevoFin
+                });
+            }
+
+            if (alternativas.length === 3) {
+                return alternativas;
+            }
+        }
+    }
+
+    return alternativas;
     }
     
 

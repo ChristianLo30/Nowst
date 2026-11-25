@@ -1,0 +1,428 @@
+openapi: 3.0.3
+info:
+  title: Nowst API
+  version: 1.0.0
+  description: API REST propia de reserva de espacios de estudio. Horarios HH:mm en
+    hora local; tarifas USD por persona y hora. Las reservas y la administracion requieren
+    clave de demostracion y rol correspondiente.
+servers:
+- url: http://localhost:3000
+paths:
+  /health:
+    get:
+      summary: Comprobar el servidor
+      tags:
+      - Sistema
+      responses:
+        '200':
+          description: Servidor activo
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  estado:
+                    type: string
+                    example: ok
+                  proyecto:
+                    type: string
+                    example: Nowst
+                required:
+                - estado
+                - proyecto
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/salas:
+    get:
+      summary: 'CU-01: consultar salas disponibles'
+      tags:
+      - Salas
+      parameters:
+      - name: fecha
+        in: query
+        required: true
+        schema: &id006
+          type: string
+          format: date
+          example: '2026-11-27'
+      - name: inicio
+        in: query
+        required: true
+        schema: &id001
+          type: string
+          pattern: ^([01][0-9]|2[0-3]):[0-5][0-9]$
+          example: '10:00'
+      - name: fin
+        in: query
+        required: true
+        schema: *id001
+      - name: personas
+        in: query
+        required: true
+        schema: &id003
+          type: integer
+          minimum: 1
+      responses:
+        '200':
+          description: Salas compatibles; alternativas cuando no hay disponibilidad
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Consulta'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/cotizaciones:
+    post:
+      summary: 'CU-02: calcular el costo del alquiler'
+      tags:
+      - Salas
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Cotizacion'
+      responses:
+        '200':
+          description: Precio por tarifa, personas y horas
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Precio'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/reservas:
+    post:
+      summary: 'CU-03: confirmar una reserva'
+      tags:
+      - Reservas
+      security: &id002
+      - ApiKey: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NuevaReserva'
+      responses:
+        '201':
+          description: Reserva persistida
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '500':
+          $ref: '#/components/responses/Error500'
+    get:
+      summary: Consultar reservas del estudiante autenticado
+      tags:
+      - Reservas
+      security: *id002
+      responses:
+        '200':
+          description: Reservas propias
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Reserva'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/reservas/{id}/cancelar:
+    patch:
+      summary: Cancelar una reserva propia
+      tags:
+      - Reservas
+      security: *id002
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: &id004
+          type: string
+          format: uuid
+      responses:
+        '200':
+          description: Reserva cancelada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Reserva'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '500':
+          $ref: '#/components/responses/Error500'
+  /api/admin/salas/{id}:
+    patch:
+      summary: 'CU-04: actualizar capacidad, tarifa u horarios'
+      tags:
+      - Administracion
+      security: *id002
+      parameters:
+      - name: id
+        in: path
+        required: true
+        schema: *id003
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarSala'
+      responses:
+        '200':
+          description: Sala actualizada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Sala'
+        '400':
+          $ref: '#/components/responses/Error400'
+        '401':
+          $ref: '#/components/responses/Error401'
+        '403':
+          $ref: '#/components/responses/Error403'
+        '404':
+          $ref: '#/components/responses/Error404'
+        '409':
+          $ref: '#/components/responses/Error409'
+        '500':
+          $ref: '#/components/responses/Error500'
+components:
+  securitySchemes:
+    ApiKey:
+      type: apiKey
+      in: header
+      name: x-api-key
+      description: Clave de estudiante o administrador, configurada localmente en
+        .env.
+  schemas:
+    Sala:
+      type: object
+      properties:
+        id: *id003
+        nombre: &id005
+          type: string
+        capacidad: *id003
+        tarifaHoraPersona: &id007
+          type: number
+          exclusiveMinimum: true
+          minimum: 0
+        abre: *id001
+        cierra: *id001
+      required:
+      - id
+      - nombre
+      - capacidad
+      - tarifaHoraPersona
+      - abre
+      - cierra
+    Reserva:
+      type: object
+      properties:
+        id: *id004
+        sala_id: *id003
+        usuario_id: *id005
+        fecha: *id006
+        inicio: *id001
+        fin: *id001
+        personas: *id003
+        total:
+          type: number
+          minimum: 0
+        estado:
+          type: string
+          enum:
+          - confirmada
+          - cancelada
+      required:
+      - id
+      - sala_id
+      - usuario_id
+      - fecha
+      - inicio
+      - fin
+      - personas
+      - total
+      - estado
+    Alternativa:
+      type: object
+      properties:
+        salaId: *id003
+        sala: *id005
+        fecha: *id006
+        inicio: *id001
+        fin: *id001
+      required:
+      - salaId
+      - sala
+      - fecha
+      - inicio
+      - fin
+    Consulta:
+      type: object
+      properties:
+        mensaje: *id005
+        salas:
+          type: array
+          items:
+            $ref: '#/components/schemas/Sala'
+        alternativas:
+          type: array
+          maxItems: 3
+          items:
+            $ref: '#/components/schemas/Alternativa'
+      required:
+      - mensaje
+      - salas
+    Cotizacion:
+      type: object
+      properties:
+        salaId: *id003
+        personas: *id003
+        horas:
+          type: number
+          minimum: 0
+          exclusiveMinimum: true
+          maximum: 24
+      required:
+      - salaId
+      - personas
+      - horas
+      example:
+        salaId: 2
+        personas: 4
+        horas: 2
+    Precio:
+      type: object
+      properties:
+        sala: *id005
+        personas: *id003
+        horas: *id007
+        tarifa: *id007
+        total:
+          type: number
+          minimum: 0
+      required:
+      - sala
+      - personas
+      - horas
+      - tarifa
+      - total
+      example:
+        sala: Sala Equipo
+        personas: 4
+        horas: 2
+        tarifa: 1.5
+        total: 12
+    NuevaReserva:
+      type: object
+      properties:
+        salaId: *id003
+        fecha: *id006
+        inicio: *id001
+        fin: *id001
+        personas: *id003
+      required:
+      - salaId
+      - fecha
+      - inicio
+      - fin
+      - personas
+      example:
+        salaId: 2
+        fecha: '2026-11-27'
+        inicio: '10:00'
+        fin: '12:00'
+        personas: 4
+    ActualizarSala:
+      type: object
+      properties:
+        capacidad: *id003
+        tarifaHoraPersona: *id007
+        abre: *id001
+        cierra: *id001
+      example:
+        tarifaHoraPersona: 2.5
+    Error:
+      type: object
+      properties:
+        error: *id005
+      required:
+      - error
+  responses:
+    Error400:
+      description: Datos invalidos o incumplimiento de aforo u horario
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Datos invalidos
+    Error401:
+      description: Clave ausente o invalida
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Debe ingresar una clave de acceso
+    Error403:
+      description: Permiso insuficiente o reserva ajena
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: No tiene permisos para esta operacion
+    Error404:
+      description: Sala o reserva no encontrada
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Sala no encontrada
+    Error409:
+      description: Conflicto de horario, estado o reserva existente
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: La sala ya esta reservada en ese horario
+    Error500:
+      description: Error interno del servidor
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error: Error interno del servidor
